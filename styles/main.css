@@ -161,3 +161,7 @@ button:active {
     min-height: 10vh;
     background-color: aqua;
 }
+
+.invite_link{
+    font-size: 75px;
+}
