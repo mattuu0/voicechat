@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="jp">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Voicechat</title>
+</head>
+<body>
+    <div class="fullOverlay" id="first_overlay">
+        <div class="Ctrl_area">
+            <h1 id="show_roomid"></h1>
+            <div class="toggle_button">
+              <input id="toggle" class="toggle_input" type='checkbox'/>ミュート
+
+              <label for="toggle" class="toggle_label">
+            </div>
+            <h2 id="show_team"></h2>
+        </div>
+        <div class="team_area">
+            <div class="team_A" id="team_A_area">
+                <h1>Aチーム</h1>
+            </div>
+            <div class="team_B" id="team_B_area">
+                <h1>Bチーム</h1>
+            </div>
+        </div>
+        <div class="observer_area" id="observer_area_id">
+            <h1>観戦席</h1>
+        </div>
+    </div>
+    <div class="connect_area" id="first_form">
+        <h1>VoiceChat</h1>
+        <input type="text" placeholder="ユーザー名" id="username_input" autocomplete="off"/>
+        <input type="text" placeholder="接続先ID" id="connectid_input" autocomplete="off"/>
+        <button id="connect_button">接続する</button>
+    </div>
+</body>
+<script src="./scripts/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
+<script src="./scripts/main.js"></script>
+<link rel="stylesheet" href="./styles/main.css">
+<link rel="stylesheet" href="./styles/toggle.css">
+</html>
