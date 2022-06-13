@@ -1,10 +1,8 @@
 .team_area{
+    user-select: none;
     min-height: 60vh;
     display: flex;
     background-size: cover;
-}
-.toggle_input{
-    font-size: 100px;
 }
 
 .team_A{
@@ -30,6 +28,7 @@
 }
 
 .observer_area{
+    user-select: none;
     background-color: rgba(8, 46, 198, 0.398);
     min-width: 95vw;
     min-height: 30vh;
@@ -160,8 +159,13 @@ button:active {
 .Ctrl_area{
     min-height: 10vh;
     background-color: aqua;
+    display: flex;
 }
 
 .invite_link{
-    font-size: 75px;
+    font-size: 50px;
+}
+
+.show_area{
+    display: flex;
 }
