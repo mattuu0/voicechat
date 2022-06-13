@@ -16,17 +16,22 @@ var teamA_users_show = document.getElementById('team_A_area');
 var teamB_users_show = document.getElementById('team_B_area');
 var idinput = document.getElementById("connectid_input")
 var show_team = document.getElementById("show_team")
+var pushbtn = document.getElementById("copylinkbtn")
+var share_btn = document.getElementById("share_btn")
+var watch_btn = document.getElementById("share_watch_btn")
+var show_area_div = document.getElementById("show_stream")
+var settingdict = {"is_share":false}
 var username;
 var usericon;
-
-
+var copydata;
+var mediastream;
+var myicon;
 var peer = new Peer(sessionuuid,options);
 var connectdict = {}
 client_init(sessionuuid)
 var streamdict = {}
 var usermediaid = uuidv4()
-var mediastream;
-var myicon;
+var screenmediaid = uuidv4()
 
 
 var options = {
@@ -34,6 +39,14 @@ var options = {
     port: location.port,
     path: '/api', // app.use('/api', peerServer);と同じ位置になるように
 };
+
+var displayMediaOptions = {
+    video: {
+        cursor: "always"
+    },
+    audio:true
+};
+  
 
 //関数
 function audio_set_mute(ismute){
@@ -247,6 +260,29 @@ function recv_data(conn,data){
             
             change_call(parsedata,"team_B")
         }
+    } else if (parsedata["command"] == "watch_stream"){
+        if (connectdict[sessionuuid]["tags"].includes("observer")){
+            return
+        }
+
+        if (connectdict[parsedata["userid"]]["tags"].includes("observer")){
+            if (streamdict[screenmediaid] !== undefined){
+                if (streamdict[screenmediaid] !== null){
+                    call_Connect(conn.peer,"video",streamdict[screenmediaid]["stream"],{})
+                }
+            }
+        }
+    } else if (parsedata["command"] == "stop_stream"){
+        try{
+            connectdict[parsedata["userid"]][parsedata["args"]["streamid"]].remove()
+        }catch(err){
+            
+        }
+        try{
+            delete connectdict[parsedata["userid"]][parsedata["args"]["streamid"]]
+        }catch(err){
+
+        }
     }
 }
 
@@ -343,7 +379,7 @@ function call_Connect(clientid,connecttype,streamobj,metadata){
 
 
 function show_stream(streamobj,streamtype,userid){
-    var dictkey = uuidv4()
+    
     
     var User_show;
     if (connectdict[userid]["tags"].includes("observer")){
@@ -355,6 +391,8 @@ function show_stream(streamobj,streamtype,userid){
     }
     
     if (streamtype == "audio"){
+        var dictkey = streamobj.id
+
         var show_area = document.createElement("div")
 
         var audio = new Audio;
@@ -373,6 +411,16 @@ function show_stream(streamobj,streamtype,userid){
         User_show.appendChild(show_area)
         return show_area
     } else if (streamtype == "video"){
+        var dictkey = streamobj.id
+
+        if (dictkey in connectdict[userid]){
+            try{
+                connectdict[userid][dictkey].remove()
+            }catch(err){
+
+            }
+        }
+
         var video = document.createElement("video");
         video.srcObject = streamobj
         video.controls = true;
@@ -383,6 +431,8 @@ function show_stream(streamobj,streamtype,userid){
         connectdict[userid]["streams"][dictkey] = "video"
         return video
     } else if (streamtype == "empty"){
+        var dictkey = uuidv4()
+
         var show_area = document.createElement("div")
 
         connectdict[userid][dictkey] = show_area
@@ -456,7 +506,7 @@ function start_peer(){
 
             toBase64Url("https://ui-avatars.com/api/name=" + String(username_input.value) + "?background=random",function(imgdata){
                 usericon = imgdata
-                showid.href = "https://Voicechat.mattuu.repl.co" + "/?connectid=" + sessionuuid
+                copydata = "https://Voicechat.mattuu.repl.co" + "/?connectid=" + sessionuuid
                 username = username_input.value
                 if (!(String(connectid_input.value).length < 1)){
                     var new_connect = gencommand("New_Connect",{"audio_id":usermediaid,"tags":connectdict[sessionuuid]["tags"],"username":username_input.value})
@@ -528,6 +578,74 @@ function move_event(move_tag){
     myicon = show_stream(null,"empty",sessionuuid)
 }
 
+pushbtn.addEventListener("click",function(){
+    try{
+        navigator.clipboard.writeText(copydata).then(() => {
+            alert("クリップボードへコピーしました")
+        }).catch(err => {
+            alert('コピーに失敗しました');
+        })
+    }catch(err){
+
+    }
+})
+
+async function startshare() {
+    
+    try {
+        
+        await navigator.mediaDevices.getDisplayMedia(displayMediaOptions).then(function(stream){
+            try{
+                settingdict.is_share = true
+                share_btn.innerText = "共有停止"
+                if (streamdict[screenmediaid] !== undefined){
+                    var stop_command = gencommand("stop_stream",{"streamid":streamdict[screenmediaid]["stream"].id})
+                    senadll(stop_command)
+                }
+            }catch(err){
+    
+            }
+            streamdict[screenmediaid] = {"stream":stream}
+            stream.getVideoTracks()[0].addEventListener('ended', () => {
+                var stop_command = gencommand("stop_stream",{"streamid":stream.id})
+                senadll(stop_command)
+                try{
+                    settingdict.is_share = false
+                    share_btn.innerText = "画面共有"
+                    delete streamdict[screenmediaid]
+                }catch(err){
+
+                }
+            });
+        }).catch(function(err){
+            
+        });
+      
+    } catch(err) {
+        console.error("Error: " + err);
+    }
+}
+
+share_btn.addEventListener("click",function(){
+    if (settingdict.is_share){
+        settingdict.is_share = false
+        share_btn.innerText = "画面共有"
+        try{
+            streamdict[screenmediaid]["stream"].getTracks().forEach(track => track.stop())
+        }catch(err){
+        }
+        var stop_command = gencommand("stop_stream",{"streamid":streamdict[screenmediaid]["stream"].id})
+        senadll(stop_command)
+    } else {
+        startshare()
+    }
+})
+
+watch_btn.addEventListener("click",function(){
+    var sendcommand = gencommand("watch_stream")
+    senadll(sendcommand)
+})
+
 Observer_users_show.addEventListener("dblclick",function(){
     move_event("observer")
 
@@ -549,6 +667,7 @@ teamB_users_show.addEventListener("dblclick",function(){
     senadll(movecommand)
 })
 
+//TODO 実際に使う際はここを消す
 /*
 navigator.permissions.query({name: 'microphone'}).then(function (result) {
     if (result.state == 'granted') {
@@ -561,7 +680,8 @@ navigator.permissions.query({name: 'microphone'}).then(function (result) {
     result.onchange = function () {};
 });
 */
-//TODO 実際に使う際はここを消す
+console.log(sessionuuid)
+
 
 const url = new URL(window.location.href);
 const params = new URLSearchParams(url.search);
