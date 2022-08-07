@@ -8,26 +8,25 @@
 <body>
     <div class="fullOverlay" id="first_overlay">
         <div class="Ctrl_area">
-            <button id="copylinkbtn">招待リンクをコピー</button>
-            <button id="share_btn">画面共有</button>
-            <button id="share_watch_btn">共有視聴</button>
-            <div class="toggle_button">
-              <input id="toggle" class="toggle_input" type='checkbox'/>ミュート
-
-              <label for="toggle" class="toggle_label">
-            </div>
-            <h2 id="show_team"></h2>
+            <button id="copylinkbtn" class="ctrlbtn">招待リンクをコピー</button>
+            <button id="share_btn" class="ctrlbtn">画面共有</button>
+            <button id="share_watch_btn" class="ctrlbtn">共有視聴</button>
+            <button id="toggle_mute" class="ctrlbtn">ミュートを解除する</button>
+            <button id="hangup_btn" class="ctrlbtn">退出する</button>
+            <button id="show_team" class="ctrlbtn">観察者</button>
         </div>
-        <div class="team_area">
-            <div class="team_A" id="team_A_area">
-                <h1>Aチーム</h1>
+        <div id="user_area">
+            <div class="team_area">
+                <div class="team_A" id="team_A_area">
+                    <h1 style="color:#de6059">Aチーム</h1>
+                </div>
+                <div class="team_B" id="team_B_area">
+                    <h1 style="color:#1b7cde">Bチーム</h1>
+                </div>
             </div>
-            <div class="team_B" id="team_B_area">
-                <h1>Bチーム</h1>
+            <div class="observer_area" id="observer_area_id">
+                <h1 class="info_h1">観戦席</h1>
             </div>
-        </div>
-        <div class="observer_area" id="observer_area_id">
-            <h1>観戦席</h1>
         </div>
         <div id="show_stream" class="show_area"></div>
     </div>
@@ -35,12 +34,11 @@
         <h1>VoiceChat</h1>
         <input type="text" placeholder="ユーザー名" id="username_input" autocomplete="off"/>
         <input type="text" placeholder="接続先ID" id="connectid_input" autocomplete="off"/>
-        <button id="connect_button">接続する</button>
+        <button id="connect_button" class="connectbtn">接続する</button>
     </div>
 </body>
 <script src="./scripts/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/uuid@latest/dist/umd/uuidv4.min.js"></script>
 <script src="./scripts/main.js"></script>
 <link rel="stylesheet" href="./styles/main.css">
-<link rel="stylesheet" href="./styles/toggle.css">
 </html>
