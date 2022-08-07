@@ -5,10 +5,13 @@
     background-size: cover;
 }
 
+/* background-color: rgba(255, 0, 0, 0.375); */
 .team_A{
-    background-color: rgba(255, 0, 0, 0.375);
+    border-bottom: 5px solid #ffffff;
     width: 50%;
     min-height: 50vh;
+    border-right: 5px solid #ffffff;
+    background-color: rgba(14, 14, 14, 0.738);
 }
 
 .team_A:hover{
@@ -16,10 +19,13 @@
     box-shadow: 0 10px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* background-color: rgba(150, 250, 0, 0.42); */
 .team_B{
-    background-color: rgba(150, 250, 0, 0.42);
+    border-bottom: 5px solid #ffffff;
     width: 50%;
     min-height: 50vh;
+    border-left: 5px solid #ffffff;
+    background-color: rgba(14, 14, 14, 0.738);
 }
 
 .team_B:hover{
@@ -27,9 +33,10 @@
     box-shadow: 0 10px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* background-color: rgba(8, 46, 198, 0.398); */ 
 .observer_area{
     user-select: none;
-    background-color: rgba(8, 46, 198, 0.398);
+    background-color: rgba(14, 14, 14, 0.738);
     min-width: 95vw;
     min-height: 30vh;
 }
@@ -45,6 +52,7 @@ h1{
 
 body{
     background-color: rgba(14, 14, 14, 0.738);
+    overflow-x: hidden;
 }
 
 .fullOverlay{
@@ -126,7 +134,7 @@ input:focus {
 :-ms-input-placeholder {
     color: rgba(225,225,225,0.4);
 }
-button {
+.connectbtn {
     position: relative;
     display: block;
     margin-top: 15px;
@@ -146,8 +154,38 @@ button {
     color: #f4f4f4;
     box-shadow: 0px 3px 0px #ab4b47;
     cursor: pointer;
+    
 }
-button:active {
+.connectbtn:active {
+    top: 3px;
+    box-shadow: none;
+}
+
+.ctrlbtn {
+    position: relative;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding: 17px;
+    width: 270px;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    -ms-border-radius: 6px;
+    -o-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-transition: all .1s ease-in-out;
+    -moz-transition: all .1s ease-in-out;
+    transition: all .1s ease-in-out;
+    font-size: 1.2em;
+    background: #f26964;
+    color: #f4f4f4;
+    box-shadow: 0px 3px 0px #ab4b47;
+    cursor: pointer;
+    float: left;
+    margin-left: 10px;
+}
+
+.ctrlbtn:active {
     top: 3px;
     box-shadow: none;
 }
@@ -156,10 +194,12 @@ button:active {
     display: none;
 }
 
+/* background-color: aqua; */
 .Ctrl_area{
     min-height: 10vh;
-    background-color: aqua;
+    border-bottom: 5px solid #ffffff;
     display: flex;
+    background-color: rgba(14, 14, 14, 0.738);
 }
 
 .invite_link{
@@ -167,5 +207,16 @@ button:active {
 }
 
 .show_area{
-    display: flex;
+    display: none;
+}
+
+.info_h1{
+  color: #ffffff;
+}
+audio{
+  background:#2a3644;
+}
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    display: none;
 }
