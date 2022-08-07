@@ -10,7 +10,7 @@ var connectid_input = document.getElementById("connectid_input")
 var first_form = document.getElementById("first_form")
 var full_overlay = document.getElementById("first_overlay")
 var showid = document.getElementById("show_roomid")
-var muteinput = document.getElementById("toggle")
+var muteinput = document.getElementById("toggle_mute")
 var Observer_users_show = document.getElementById('observer_area_id');
 var teamA_users_show = document.getElementById('team_A_area');
 var teamB_users_show = document.getElementById('team_B_area');
@@ -20,7 +20,9 @@ var pushbtn = document.getElementById("copylinkbtn")
 var share_btn = document.getElementById("share_btn")
 var watch_btn = document.getElementById("share_watch_btn")
 var show_area_div = document.getElementById("show_stream")
-var settingdict = {"is_share":false}
+var usre_area = document.getElementById("user_area")
+var hangup_btn = document.getElementById("hangup_btn")
+var settingdict = {"is_share":false,"is_watch":false,"input_mute":true}
 var username;
 var usericon;
 var copydata;
@@ -28,27 +30,27 @@ var mediastream;
 var myicon;
 var peer = new Peer(sessionuuid,options);
 var connectdict = {}
-client_init(sessionuuid)
 var streamdict = {}
 var usermediaid = uuidv4()
 var screenmediaid = uuidv4()
+client_init(sessionuuid)
 
 
 var options = {
     host: location.hostname,
     port: location.port,
-    path: '/api', // app.use('/api', peerServer);と同じ位置になるように
+    path: '/api',
 };
 
 var displayMediaOptions = {
     video: {
+        width:{max:1280},
+        height:{max:720},
         cursor: "always"
     },
     audio:true
 };
-  
 
-//関数
 function audio_set_mute(ismute){
     for (var audiotrack of mediastream.getAudioTracks()){
         audiotrack.enabled = !ismute
@@ -60,15 +62,22 @@ function client_init(userid){
         "conn":null,
         "tags":["observer"],
         "username":"",
-        "calls":[]
+        "calls":[],
+        "watch_stream":false
     }
 }
 
-muteinput.addEventListener("change",function(){
-    audio_set_mute(!muteinput.checked)
+muteinput.addEventListener("click",function(){
+    if (settingdict.input_mute){
+        settingdict.input_mute = false
+        muteinput.innerText = "ミュートにする"
+    } else {
+        muteinput.innerText = "ミュートを解除する"
+        settingdict.input_mute = true
+    }
+    audio_set_mute(settingdict.input_mute)
 })
 
-//callに対する応答
 peer.on("call",function(call){
     if (!(call.peer in connectdict)){
         client_init(call.peer)
@@ -76,21 +85,21 @@ peer.on("call",function(call){
 
     if (call.metadata !== undefined){
         var streamid = call.metadata["streamid"]
-        //console.log(streamdict[streamid])
         if (streamdict[streamid] !== undefined){
             call.answer(streamdict[streamid])
+
         }else {
             call.answer()
         }
     }else{
         call.answer()
     }
+
     connectdict[call.peer]["calls"].push(call)
 
     var show_object;
 
     call.on("stream",function(remoteStream){
-        //console.log(remoteStream)
         if (!(call.metadata["is_empty"])){
             var streamtype = call.metadata["stream_type"]
                 
@@ -105,7 +114,6 @@ peer.on("call",function(call){
         try{
             show_object.remove()
         }catch(err){
-            //console.log(err)
         }
     })
 })
@@ -260,18 +268,24 @@ function recv_data(conn,data){
             
             change_call(parsedata,"team_B")
         }
-    } else if (parsedata["command"] == "watch_stream"){
+    } else if (parsedata["command"] == "start_watch_stream"){
         if (connectdict[sessionuuid]["tags"].includes("observer")){
             return
         }
 
         if (connectdict[parsedata["userid"]]["tags"].includes("observer")){
+            connectdict[parsedata["userid"]].watch_stream = true
             if (streamdict[screenmediaid] !== undefined){
                 if (streamdict[screenmediaid] !== null){
-                    call_Connect(conn.peer,"video",streamdict[screenmediaid]["stream"],{})
+                    if (!(streamdict[screenmediaid]["calllist"].includes(conn.peer))){
+                        streamdict[screenmediaid]["calllist"].push(conn.peer)
+                        call_Connect(conn.peer,"video",streamdict[screenmediaid]["stream"],{})
+                    }
                 }
             }
         }
+    } else if (parsedata["command"] == "stop_watch_stream"){
+        connectdict[sessionuuid].watch_stream = false
     } else if (parsedata["command"] == "stop_stream"){
         try{
             connectdict[parsedata["userid"]][parsedata["args"]["streamid"]].remove()
@@ -287,12 +301,15 @@ function recv_data(conn,data){
 }
 
 function send_Close_Event(userid){
-    //console.log(connectdict[userid])
+    try{
+        close_call(userid)
+    }catch(err){
+
+    }
     for (var removeid of Object.keys(connectdict[userid]["streams"])){
         try{
             connectdict[userid][removeid].remove()
         }catch(err){
-            //console.log(err)
         }
     }
     try{
@@ -333,7 +350,6 @@ function createEmptyAudioTrack(){
     const track = dst.stream.getAudioTracks()[0];
     return Object.assign(track, { enabled: false });
 };
-//関数
 function call_Connect(clientid,connecttype,streamobj,metadata){
     if (clientid == sessionuuid){
         return
@@ -342,7 +358,12 @@ function call_Connect(clientid,connecttype,streamobj,metadata){
     if (!(clientid in connectdict)){
         client_init(clientid)
     }
-    
+    delete streamdict[usermediaid]
+
+    usermediaid = String(uuidv4())
+    streamdict[usermediaid] = mediastream
+    connectdict[sessionuuid]["audioid"] = usermediaid
+
     metadata["stream_type"] = connecttype
     if (streamobj == null){
         const audioTrack = createEmptyAudioTrack();
@@ -359,11 +380,9 @@ function call_Connect(clientid,connecttype,streamobj,metadata){
     }
     connectdict[clientid]["calls"].push(call)
     call.on('stream', function (remoteStream) {
-        //console.log(remoteStream)
         if (remoteStream !== undefined){
             var userid = clientid
-            ////console.log(remoteStream)
-            
+
             show_object = show_stream(remoteStream,connecttype,userid)
         }
     });
@@ -371,7 +390,7 @@ function call_Connect(clientid,connecttype,streamobj,metadata){
         try{
             show_object.remove()
         }catch(err){
-            //console.log(err)
+
         }
     })
 }
@@ -424,9 +443,13 @@ function show_stream(streamobj,streamtype,userid){
         var video = document.createElement("video");
         video.srcObject = streamobj
         video.controls = true;
-        video.width = 700
-        video.play()
-        User_show.appendChild(video)
+        video.muted = true
+        try{
+            video.play()
+        }catch(err){
+
+        }
+        show_area_div.appendChild(video)
         connectdict[userid][dictkey] = video
         connectdict[userid]["streams"][dictkey] = "video"
         return video
@@ -517,11 +540,9 @@ function start_peer(){
                 connectdict[sessionuuid]["tags"] = ["observer"]
 
                 myicon = show_stream(null,"empty",sessionuuid)
-                //move_event("observer")
             });
         }).catch(
             function(err) {
-                //console.log(err)
                 alert("使用するにはマイクへのアクセスを許可してください")
                 window.location.reload()
         })
@@ -555,6 +576,7 @@ function move_event(move_tag){
                 }
             }
             connectdict[clientkey]["calls"] = []
+            connectdict[clientkey]["streams"] = []
         }catch(err){
 
         }
@@ -590,6 +612,14 @@ pushbtn.addEventListener("click",function(){
     }
 })
 
+hangup_btn.addEventListener("click",function(){
+    try{
+        window.location.reload()
+    }catch(err){
+
+    }
+})
+
 async function startshare() {
     
     try {
@@ -605,7 +635,7 @@ async function startshare() {
             }catch(err){
     
             }
-            streamdict[screenmediaid] = {"stream":stream}
+            streamdict[screenmediaid] = {"stream":stream,"calllist":[]}
             stream.getVideoTracks()[0].addEventListener('ended', () => {
                 var stop_command = gencommand("stop_stream",{"streamid":stream.id})
                 senadll(stop_command)
@@ -617,6 +647,18 @@ async function startshare() {
 
                 }
             });
+
+            for (var userid in connectdict){
+    
+                if (connectdict[userid]["tags"].includes("observer")){
+                    if (connectdict[userid].watch_stream){
+                        if (!(streamdict[screenmediaid]["calllist"].includes(userid))){
+                            streamdict[screenmediaid]["calllist"].push(userid)
+                            call_Connect(userid,"video",stream,{})
+                        }
+                    }
+                }
+            }
         }).catch(function(err){
             
         });
@@ -642,8 +684,21 @@ share_btn.addEventListener("click",function(){
 })
 
 watch_btn.addEventListener("click",function(){
-    var sendcommand = gencommand("watch_stream")
-    senadll(sendcommand)
+    if (settingdict.is_watch){
+        var sendcommand = gencommand("stop_watch_stream")
+        senadll(sendcommand)
+        settingdict.is_watch = false
+        usre_area.style.display ="block";
+        show_area_div.style.display ="none";
+        watch_btn.innerText = "共有視聴"
+    } else {
+        var sendcommand = gencommand("start_watch_stream")
+        senadll(sendcommand)
+        usre_area.style.display ="none";
+        show_area_div.style.display ="block";
+        watch_btn.innerText = "視聴停止"
+        settingdict.is_watch = true
+    }
 })
 
 Observer_users_show.addEventListener("dblclick",function(){
@@ -666,22 +721,6 @@ teamB_users_show.addEventListener("dblclick",function(){
     var movecommand = gencommand("Move_Event_Command",{"move_tag":"team_B","streamid":usermediaid})
     senadll(movecommand)
 })
-
-//TODO 実際に使う際はここを消す
-/*
-navigator.permissions.query({name: 'microphone'}).then(function (result) {
-    if (result.state == 'granted') {
-
-    } else if (result.state == 'prompt') {
-
-    } else if (result.state == 'denied') {
-        
-    }
-    result.onchange = function () {};
-});
-*/
-console.log(sessionuuid)
-
 
 const url = new URL(window.location.href);
 const params = new URLSearchParams(url.search);
